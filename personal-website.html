@@ -1,0 +1,1794 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>羽球人的世界</title>
+    <style>
+        @font-face {
+            font-family: 'Outfit';
+            src: url('./_shared/fonts/Outfit-Regular.ttf') format('truetype');
+            font-weight: 400;
+        }
+        @font-face {
+            font-family: 'Outfit';
+            src: url('./_shared/fonts/Outfit-Bold.ttf') format('truetype');
+            font-weight: 700;
+        }
+
+        :root {
+            --bg: #e0f4ff;
+            --bg2: rgba(255, 255, 255, 0.85);
+            --ink: #2d3436;
+            --muted: #636e72;
+            --rule: rgba(116, 185, 255, 0.3);
+            --accent: #74b9ff;
+            --accent2: #0984e3;
+            --accent3: #00cec9;
+            --accent4: #fdcb6e;
+            --accent5: #fd79a8;
+            --accent6: #55efc4;
+            --card-border: #74b9ff;
+            --shadow-cartoon: 4px 4px 0px #2d3436;
+            --shadow-cartoon-lg: 6px 6px 0px #2d3436;
+            --font-xingkai: "STXingkai", "华文行楷", "KaiTi", "楷体", "Kaiti SC", "楷体_GB2312", "STKaiti", "华文楷体", serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-xingkai);
+            background: var(--bg);
+            color: var(--ink);
+            line-height: 2;
+            overflow-x: hidden;
+            font-size: 1.15rem;
+        }
+
+        /* 卡通动态渐变背景 */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background: linear-gradient(-45deg, #e0f4ff, #dfe6e9, #a8d8ea, #d0eefc);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 浮动云朵装饰 */
+        .cloud-deco {
+            position: fixed;
+            z-index: -1;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .cloud-deco.c1 { top: 5%; left: 5%; font-size: 4rem; animation: cloudDrift 25s linear infinite; }
+        .cloud-deco.c2 { top: 15%; right: 8%; font-size: 3rem; animation: cloudDrift 30s linear infinite reverse; }
+        .cloud-deco.c3 { top: 45%; left: 3%; font-size: 2.5rem; animation: cloudDrift 35s linear infinite; }
+
+        @keyframes cloudDrift {
+            0% { transform: translateX(0) translateY(0); }
+            50% { transform: translateX(30px) translateY(-15px); }
+            100% { transform: translateX(0) translateY(0); }
+        }
+
+        /* 浮动粒子效果 */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            animation: float 20s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% {
+                transform: translateY(-100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* 鼠标跟随光点 */
+        .cursor-glow {
+            position: fixed;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(116, 185, 255, 0.25) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s ease;
+        }
+
+        /* ===== 卡通开场动画 ===== */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #74b9ff, #0984e3, #00cec9);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+            overflow: hidden;
+        }
+
+        .splash-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* 开场动画 - 弹跳的卡通元素 */
+        .splash-stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .splash-star {
+            position: absolute;
+            font-size: 1.5rem;
+            animation: starSpin 3s ease-in-out infinite;
+        }
+
+        .splash-star:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
+        .splash-star:nth-child(2) { top: 20%; right: 15%; animation-delay: 0.3s; }
+        .splash-star:nth-child(3) { bottom: 20%; left: 12%; animation-delay: 0.6s; }
+        .splash-star:nth-child(4) { bottom: 15%; right: 10%; animation-delay: 0.9s; }
+        .splash-star:nth-child(5) { top: 50%; left: 5%; animation-delay: 1.2s; }
+        .splash-star:nth-child(6) { top: 40%; right: 5%; animation-delay: 1.5s; }
+
+        @keyframes starSpin {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.3); }
+        }
+
+        .splash-logo {
+            font-size: 6rem;
+            margin-bottom: 1rem;
+            animation: logoBounce 0.8s ease infinite alternate;
+            filter: drop-shadow(4px 4px 0px rgba(0,0,0,0.2));
+        }
+
+        @keyframes logoBounce {
+            0% { transform: translateY(0) scale(1) rotate(-5deg); }
+            100% { transform: translateY(-25px) scale(1.1) rotate(5deg); }
+        }
+
+        .splash-title {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 3px 3px 0 #2d3436, 6px 6px 20px rgba(0,0,0,0.2);
+            margin-bottom: 0.5rem;
+            opacity: 0;
+            animation: titlePop 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) 0.3s forwards;
+        }
+
+        @keyframes titlePop {
+            0% { opacity: 0; transform: scale(0) rotate(-20deg); }
+            100% { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+
+        .splash-subtitle {
+            font-size: 1.3rem;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 2rem;
+            opacity: 0;
+            animation: subtitleSlide 0.6s ease 0.6s forwards;
+        }
+
+        @keyframes subtitleSlide {
+            0% { opacity: 0; transform: translateX(-30px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+
+        .splash-loader {
+            width: 250px;
+            height: 16px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+            border: 3px solid #fff;
+            overflow: hidden;
+            opacity: 0;
+            animation: loaderAppear 0.5s ease 0.9s forwards;
+        }
+
+        .splash-loader-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #fdcb6e, #fd79a8, #55efc4);
+            background-size: 200% 100%;
+            border-radius: 6px;
+            animation: loaderFill 2s ease forwards, loaderGlow 1s ease infinite;
+        }
+
+        @keyframes loaderAppear {
+            0% { opacity: 0; transform: scale(0.5); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes loaderFill {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        @keyframes loaderGlow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+
+        /* 点击波纹效果 */
+        .click-ripple {
+            position: fixed;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(116, 185, 255, 0.5) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 9998;
+            animation: rippleExpand 0.6s ease-out forwards;
+        }
+
+        @keyframes rippleExpand {
+            0% { width: 0; height: 0; opacity: 1; }
+            100% { width: 200px; height: 200px; opacity: 0; }
+        }
+
+        /* 发光球体装饰 */
+        .glow-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0.4;
+            animation: orbFloat 8s ease-in-out infinite;
+        }
+
+        .glow-orb.orb1 { width: 250px; height: 250px; background: var(--accent); top: 10%; left: 10%; animation-delay: 0s; }
+        .glow-orb.orb2 { width: 200px; height: 200px; background: var(--accent3); bottom: 20%; right: 15%; animation-delay: -2s; }
+        .glow-orb.orb3 { width: 180px; height: 180px; background: var(--accent4); top: 50%; left: 50%; animation-delay: -4s; }
+
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+
+        /* 数据统计卡片 */
+        .hero-stats {
+            display: flex;
+            gap: 2.5rem;
+            justify-content: center;
+            margin-top: 3rem;
+            opacity: 0;
+            animation: fadeInUp 1s ease 1s forwards;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+            background: #fff;
+            border: 3px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1rem 1.5rem;
+            box-shadow: var(--shadow-cartoon);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-5px) rotate(-2deg);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent2);
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+        }
+
+        /* 3D卡片效果 */
+        .hero-3d {
+            perspective: 1000px;
+        }
+
+        .hero-3d-content {
+            transition: transform 0.1s ease;
+            transform-style: preserve-3d;
+        }
+
+        /* 漂浮几何装饰 */
+        .floating-shapes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .floating-shape {
+            position: absolute;
+            opacity: 0.2;
+            animation: shapeFloat 20s ease-in-out infinite;
+        }
+
+        .floating-shape.shape1 { top: 15%; left: 8%; width: 50px; height: 50px; border: 3px solid var(--accent); border-radius: 50%; animation-delay: 0s; }
+        .floating-shape.shape2 { top: 70%; left: 90%; width: 35px; height: 35px; background: var(--accent5); transform: rotate(45deg); animation-delay: -5s; }
+        .floating-shape.shape3 { top: 40%; right: 8%; width: 45px; height: 45px; border: 3px solid var(--accent3); border-radius: 12px; animation-delay: -10s; }
+        .floating-shape.shape4 { bottom: 20%; left: 12%; width: 30px; height: 30px; background: var(--accent4); clip-path: polygon(50% 0%, 0% 100%, 100% 100%); animation-delay: -15s; }
+        .floating-shape.shape5 { top: 25%; right: 25%; width: 22px; height: 22px; border: 3px solid var(--accent5); border-radius: 50%; animation-delay: -7s; }
+        .floating-shape.shape6 { bottom: 35%; right: 10%; width: 40px; height: 40px; background: var(--accent6); clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); animation-delay: -12s; }
+
+        @keyframes shapeFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-30px) rotate(90deg); }
+            50% { transform: translateY(20px) rotate(180deg); }
+            75% { transform: translateY(-20px) rotate(270deg); }
+        }
+
+        /* 导航栏 */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 1rem 2rem;
+            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.9);
+            border-bottom: 3px solid var(--accent);
+            transition: all 0.3s ease;
+        }
+
+        nav.scrolled {
+            padding: 0.7rem 2rem;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 20px rgba(116, 185, 255, 0.2);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent2);
+            text-shadow: 2px 2px 0 rgba(116, 185, 255, 0.3);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            position: relative;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+        }
+
+        .nav-links a:hover {
+            color: #fff;
+            background: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 3px;
+            background: var(--accent5);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 70%;
+        }
+
+        /* 欢迎界面 Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .hero-greeting {
+            font-size: 1.5rem;
+            color: var(--accent2);
+            margin-bottom: 1rem;
+            opacity: 0;
+            animation: fadeInUp 1s ease forwards;
+            background: #fff;
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            border-radius: 30px;
+            border: 3px solid var(--accent);
+            box-shadow: var(--shadow-cartoon);
+        }
+
+        .hero-title {
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+            opacity: 0;
+            animation: fadeInUp 1s ease 0.2s forwards;
+            text-shadow: 3px 3px 0 rgba(116, 185, 255, 0.3);
+        }
+
+        .hero-title .gradient-text {
+            background: linear-gradient(135deg, var(--accent2), var(--accent3), var(--accent5));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            background-size: 200% 200%;
+            animation: gradientText 3s ease infinite;
+        }
+
+        @keyframes gradientText {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .typing-text {
+            font-size: 1.8rem;
+            color: var(--muted);
+            margin-bottom: 2rem;
+            min-height: 2.5rem;
+            opacity: 0;
+            animation: fadeInUp 1s ease 0.4s forwards;
+        }
+
+        .typing-text .cursor {
+            display: inline-block;
+            width: 3px;
+            height: 1.2em;
+            background: var(--accent2);
+            margin-left: 5px;
+            animation: blink 1s infinite;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            opacity: 0;
+            animation: fadeInUp 1s ease 0.6s forwards;
+        }
+
+        .btn {
+            padding: 0.9rem 2rem;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: 3px solid #2d3436;
+            position: relative;
+            overflow: hidden;
+            font-family: var(--font-xingkai);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: var(--shadow-cartoon);
+        }
+
+        .btn-primary:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px #2d3436;
+        }
+
+        .btn-primary:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px #2d3436;
+        }
+
+        .btn-secondary {
+            background: #fff;
+            color: var(--accent2);
+            border: 3px solid var(--accent2);
+            box-shadow: var(--shadow-cartoon);
+        }
+
+        .btn-secondary:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px #2d3436;
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .btn-secondary:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px #2d3436;
+        }
+
+        /* 按钮光效 */
+        .btn-glow {
+            position: relative;
+        }
+
+        .btn-glow::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, var(--accent), var(--accent5), var(--accent4), var(--accent6));
+            background-size: 400% 400%;
+            border-radius: 50px;
+            z-index: -1;
+            animation: glowRotate 3s ease infinite;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .btn-glow:hover::before {
+            opacity: 0.6;
+        }
+
+        @keyframes glowRotate {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            animation: fadeInUp 1s ease 0.8s forwards;
+        }
+
+        .scroll-indicator .mouse {
+            width: 26px;
+            height: 42px;
+            border: 3px solid var(--accent2);
+            border-radius: 13px;
+            position: relative;
+            background: rgba(255,255,255,0.5);
+        }
+
+        .scroll-indicator .wheel {
+            width: 4px;
+            height: 8px;
+            background: var(--accent2);
+            border-radius: 2px;
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: scrollWheel 2s ease infinite;
+        }
+
+        @keyframes scrollWheel {
+            0% { opacity: 1; top: 8px; }
+            100% { opacity: 0; top: 20px; }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 飞舞的羽毛球 */
+        .floating-shuttlecocks {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .shuttlecock {
+            position: absolute;
+            font-size: 2rem;
+            opacity: 0.4;
+            animation: shuttlecockFloat 15s ease-in-out infinite;
+        }
+
+        .shuttlecock:nth-child(1) { top: 20%; left: 10%; animation-delay: 0s; font-size: 3rem; }
+        .shuttlecock:nth-child(2) { top: 60%; left: 85%; animation-delay: -3s; font-size: 2.5rem; }
+        .shuttlecock:nth-child(3) { top: 30%; right: 15%; animation-delay: -6s; font-size: 2rem; }
+        .shuttlecock:nth-child(4) { bottom: 25%; left: 20%; animation-delay: -9s; font-size: 2.8rem; }
+        .shuttlecock:nth-child(5) { top: 70%; left: 60%; animation-delay: -12s; font-size: 2.2rem; }
+
+        @keyframes shuttlecockFloat {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(30px, -40px) rotate(15deg); }
+            50% { transform: translate(-20px, -60px) rotate(-10deg); }
+            75% { transform: translate(40px, -30px) rotate(20deg); }
+        }
+
+        /* 脉冲光环效果 */
+        .pulse-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            border: 3px solid rgba(116, 185, 255, 0.3);
+            animation: pulseRing 3s ease-out infinite;
+        }
+
+        .pulse-ring:nth-child(2) { animation-delay: 1s; }
+        .pulse-ring:nth-child(3) { animation-delay: 2s; }
+
+        @keyframes pulseRing {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+        }
+
+        /* 欢迎标题装饰 */
+        .hero-decoration {
+            position: absolute;
+            font-size: 4rem;
+            opacity: 0.2;
+            animation: floatDecoration 6s ease-in-out infinite;
+        }
+
+        .hero-decoration.left { left: 5%; top: 30%; }
+        .hero-decoration.right { right: 5%; bottom: 30%; animation-delay: -3s; }
+
+        @keyframes floatDecoration {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(10deg); }
+        }
+
+        /* 通用区块样式 */
+        section {
+            padding: 6rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-title h2 {
+            font-size: clamp(2.5rem, 6vw, 3.5rem);
+            margin-bottom: 1rem;
+            position: relative;
+            display: inline-block;
+            color: var(--accent2);
+            text-shadow: 2px 2px 0 rgba(116, 185, 255, 0.2);
+        }
+
+        .section-title h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 5px;
+            background: linear-gradient(90deg, var(--accent), var(--accent5), var(--accent4));
+            border-radius: 3px;
+        }
+
+        .section-title p {
+            color: var(--muted);
+            font-size: 1.3rem;
+            margin-top: 1.5rem;
+        }
+
+        /* 卡通卡片 */
+        .glass-card {
+            background: var(--bg2);
+            backdrop-filter: blur(10px);
+            border: 3px solid var(--card-border);
+            border-radius: 20px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-cartoon);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px) rotate(-1deg);
+            box-shadow: var(--shadow-cartoon-lg);
+            border-color: var(--accent5);
+        }
+
+        /* 关于我 */
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .about-image {
+            position: relative;
+        }
+
+        .avatar-container {
+            width: 250px;
+            height: 250px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .avatar-ring {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent3), var(--accent5));
+            animation: rotate 8s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #d0eefc, #a8d8ea);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem;
+            position: relative;
+            z-index: 1;
+            border: 4px solid #fff;
+        }
+
+        .about-text h3 {
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+            color: var(--accent2);
+        }
+
+        .about-text p {
+            color: var(--muted);
+            margin-bottom: 1.5rem;
+            line-height: 1.8;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            background: rgba(116, 185, 255, 0.1);
+            padding: 0.8rem;
+            border-radius: 12px;
+            border: 2px solid rgba(116, 185, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .info-item:hover {
+            background: rgba(116, 185, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        .info-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent), var(--accent3));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            border: 2px solid #fff;
+        }
+
+        .info-text span {
+            display: block;
+            font-size: 1rem;
+            color: var(--muted);
+        }
+
+        .info-text strong {
+            color: var(--ink);
+        }
+
+        /* 兴趣爱好 */
+        .hobbies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .hobby-card {
+            text-align: center;
+            padding: 2.5rem 1.5rem;
+        }
+
+        .hobby-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        .hobby-card:hover .hobby-icon {
+            transform: scale(1.3) rotate(15deg);
+        }
+
+        .hobby-card h4 {
+            font-size: 2.4rem;
+            margin-bottom: 0.8rem;
+            color: var(--accent2);
+        }
+
+        .hobby-card p {
+            color: var(--muted);
+            font-size: 1.65rem;
+            line-height: 1.8;
+        }
+
+        /* 技能展示 */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .skill-category h3 {
+            margin-bottom: 1.5rem;
+            font-size: 2.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            color: var(--accent2);
+        }
+
+        .skill-item {
+            margin-bottom: 1.2rem;
+            padding: 1rem;
+            background: rgba(116, 185, 255, 0.08);
+            border-radius: 12px;
+            border: 2px solid rgba(116, 185, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .skill-item:hover {
+            background: rgba(116, 185, 255, 0.15);
+            transform: translateX(5px);
+            border-color: var(--accent);
+        }
+
+        .skill-name {
+            font-weight: 700;
+            font-size: 1.8rem;
+            color: var(--accent2);
+            margin-bottom: 0.3rem;
+        }
+
+        .skill-desc {
+            color: var(--muted);
+            font-size: 1.55rem;
+            line-height: 1.8;
+        }
+
+        .skill-tag {
+            display: inline-block;
+            padding: 0.2rem 0.8rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent3));
+            color: #fff;
+            border-radius: 15px;
+            font-size: 1.35rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+            border: 2px solid #fff;
+        }
+
+        /* 成就展示 */
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .achievement-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .achievement-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .achievement-card h4 {
+            font-size: 2.2rem;
+            margin-bottom: 0.8rem;
+            color: var(--accent2);
+        }
+
+        .achievement-card p {
+            color: var(--muted);
+            font-size: 1.65rem;
+            line-height: 1.8;
+        }
+
+        .achievement-year {
+            display: inline-block;
+            padding: 0.3rem 1rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent3));
+            border-radius: 20px;
+            font-size: 1.3rem;
+            color: #fff;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            border: 2px solid #fff;
+        }
+
+        /* 联系我 */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+        }
+
+        .contact-info h3 {
+            font-size: 1.9rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent2);
+        }
+
+        .contact-info p {
+            color: var(--muted);
+            margin-bottom: 2rem;
+            line-height: 1.8;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .contact-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--accent), var(--accent3));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            border: 3px solid #fff;
+            box-shadow: 2px 2px 0 var(--accent2);
+            transition: transform 0.3s ease;
+        }
+
+        .contact-item:hover .contact-icon {
+            transform: scale(1.1) rotate(-10deg);
+        }
+
+        .contact-text span {
+            display: block;
+            font-size: 1rem;
+            color: var(--muted);
+        }
+
+        .contact-text a {
+            color: var(--ink);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .contact-text a:hover {
+            color: var(--accent2);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .social-link {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: #fff;
+            border: 3px solid var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            box-shadow: 3px 3px 0 var(--accent2);
+        }
+
+        .social-link:hover {
+            background: var(--accent);
+            border-color: var(--accent2);
+            transform: translate(-2px, -2px);
+            box-shadow: 5px 5px 0 var(--accent2);
+        }
+
+        /* 表单样式 */
+        .contact-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 1rem 1.2rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: 3px solid var(--accent);
+            border-radius: 14px;
+            color: var(--ink);
+            font-family: var(--font-xingkai);
+            font-size: 1.15rem;
+            transition: all 0.3s ease;
+            outline: none;
+            box-shadow: 3px 3px 0 rgba(116, 185, 255, 0.3);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: var(--accent5);
+            box-shadow: 4px 4px 0 rgba(253, 121, 168, 0.3);
+        }
+
+        .form-group label {
+            position: absolute;
+            left: 1.2rem;
+            top: 1rem;
+            color: var(--muted);
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus + label,
+        .form-group input:not(:placeholder-shown) + label,
+        .form-group textarea:focus + label,
+        .form-group textarea:not(:placeholder-shown) + label {
+            top: -0.7rem;
+            left: 0.8rem;
+            font-size: 0.8rem;
+            background: var(--bg);
+            padding: 0 0.5rem;
+            color: var(--accent2);
+            border-radius: 4px;
+        }
+
+        /* 页脚 */
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            border-top: 3px solid var(--accent);
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        footer p {
+            margin-bottom: 0.5rem;
+        }
+
+        footer .heart {
+            color: #ff6b6b;
+            animation: heartbeat 1.5s ease infinite;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        /* 滚动显示动画 */
+        .reveal {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .about-grid, .contact-grid { grid-template-columns: 1fr; }
+            .about-image { order: -1; }
+            .avatar-container { width: 180px; height: 180px; }
+            .info-grid { grid-template-columns: 1fr; }
+            section { padding: 4rem 1.5rem; }
+            .hero-buttons { flex-direction: column; align-items: center; }
+            .btn { width: 100%; max-width: 250px; }
+            .cursor-glow { display: none; }
+            .hero-stats { gap: 1rem; }
+            .stat-number { font-size: 1.8rem; }
+            .glow-orb { display: none; }
+            .hero-3d { perspective: none; }
+            .hero-3d-content { transform: none !important; }
+            .cloud-deco { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 卡通开场动画 -->
+    <div class="splash-screen" id="splashScreen">
+        <div class="splash-stars">
+            <span class="splash-star">⭐</span>
+            <span class="splash-star">✨</span>
+            <span class="splash-star">🌟</span>
+            <span class="splash-star">💫</span>
+            <span class="splash-star">⭐</span>
+            <span class="splash-star">✨</span>
+        </div>
+        <div class="splash-logo">🏸</div>
+        <div class="splash-title">羽球人的世界</div>
+        <div class="splash-subtitle">热爱羽毛球的学生</div>
+        <div class="splash-loader">
+            <div class="splash-loader-bar"></div>
+        </div>
+    </div>
+
+    <!-- 动态背景 -->
+    <div class="animated-bg"></div>
+    <div class="cloud-deco c1">☁️</div>
+    <div class="cloud-deco c2">☁️</div>
+    <div class="cloud-deco c3">☁️</div>
+    <div class="particles" id="particles"></div>
+
+    <!-- 鼠标跟随光点 -->
+    <div class="cursor-glow" id="cursorGlow"></div>
+
+    <!-- 导航栏 -->
+    <nav id="navbar">
+        <div class="nav-container">
+            <div class="logo">🏸 羽球人的世界</div>
+            <ul class="nav-links">
+                <li><a href="#home">首页</a></li>
+                <li><a href="#about">关于我</a></li>
+                <li><a href="#hobbies">兴趣爱好</a></li>
+                <li><a href="#skills">技能</a></li>
+                <li><a href="#achievements">成就</a></li>
+                <li><a href="#contact">联系</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 欢迎界面 -->
+    <section class="hero" id="home">
+        <div class="glow-orb orb1"></div>
+        <div class="glow-orb orb2"></div>
+        <div class="glow-orb orb3"></div>
+
+        <div class="floating-shapes">
+            <div class="floating-shape shape1"></div>
+            <div class="floating-shape shape2"></div>
+            <div class="floating-shape shape3"></div>
+            <div class="floating-shape shape4"></div>
+            <div class="floating-shape shape5"></div>
+            <div class="floating-shape shape6"></div>
+        </div>
+
+        <div class="floating-shuttlecocks">
+            <span class="shuttlecock">🏸</span>
+            <span class="shuttlecock">🏸</span>
+            <span class="shuttlecock">🏸</span>
+            <span class="shuttlecock">🏸</span>
+            <span class="shuttlecock">🏸</span>
+        </div>
+
+        <div class="pulse-ring"></div>
+        <div class="pulse-ring"></div>
+        <div class="pulse-ring"></div>
+
+        <div class="hero-decoration left">✨</div>
+        <div class="hero-decoration right">⭐</div>
+
+        <div class="hero-content hero-3d">
+            <div class="hero-3d-content" id="hero3dContent">
+                <p class="hero-greeting">👋 你好，欢迎来到我的个人主页</p>
+                <h1 class="hero-title">
+                    我是 <span class="gradient-text">周剑</span>
+                </h1>
+                <div class="typing-text">
+                    <span id="typed-text"></span><span class="cursor"></span>
+                </div>
+                <div class="hero-buttons">
+                    <a href="#about" class="btn btn-primary btn-glow">了解更多</a>
+                    <a href="#contact" class="btn btn-secondary btn-glow">联系我</a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <div class="stat-number" data-target="3">0</div>
+                        <div class="stat-label">年球龄</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" data-target="2">0</div>
+                        <div class="stat-label">参加比赛</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" data-target="150">0</div>
+                        <div class="stat-label">训练时长(h)</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" data-target="100">0</div>
+                        <div class="stat-label">热情指数</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <div class="mouse">
+                <div class="wheel"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 关于我 -->
+    <section id="about">
+        <div class="section-title reveal">
+            <h2>关于我</h2>
+            <p>认识一下真实的我</p>
+        </div>
+        <div class="about-grid">
+            <div class="about-image reveal">
+                <div class="avatar-container">
+                    <div class="avatar-ring"></div>
+                    <div class="avatar">🏸</div>
+                </div>
+            </div>
+            <div class="about-text glass-card reveal">
+                <h3>学生 &amp; 羽毛球爱好者</h3>
+                <p>你好！我叫周剑，是一名热爱生活的学生。我相信学习和运动是生活中最重要的两件事——一个让头脑充实，一个让身体健康。</p>
+                <p>羽毛球是我最大的爱好，在球场上挥洒汗水的时刻让我感到无比快乐和自由。每一次挥拍、每一场比赛，都是对自我的挑战和超越。</p>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-icon">📍</div>
+                        <div class="info-text">
+                            <span>家乡</span>
+                            <strong>四川德阳</strong>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-icon">🎓</div>
+                        <div class="info-text">
+                            <span>身份</span>
+                            <strong>在校学生</strong>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-icon">🏸</div>
+                        <div class="info-text">
+                            <span>爱好</span>
+                            <strong>羽毛球</strong>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-icon">💪</div>
+                        <div class="info-text">
+                            <span>球龄</span>
+                            <strong>3年</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 兴趣爱好 -->
+    <section id="hobbies">
+        <div class="section-title reveal">
+            <h2>兴趣爱好</h2>
+            <p>我喜欢做的事情</p>
+        </div>
+        <div class="hobbies-grid">
+            <div class="hobby-card glass-card reveal">
+                <div class="hobby-icon">🏸</div>
+                <h4>羽毛球</h4>
+                <p>作为一名羽毛球爱好者，我热爱这项运动。它不仅锻炼了我的身体，更培养了我的意志力和团队精神。</p>
+            </div>
+            <div class="hobby-card glass-card reveal">
+                <div class="hobby-icon">📚</div>
+                <h4>学习探索</h4>
+                <p>作为学生，我享受学习新知识的过程。探索未知领域，挑战自我，是我一直追求的目标。</p>
+            </div>
+            <div class="hobby-card glass-card reveal">
+                <div class="hobby-icon">🎮</div>
+                <h4>休闲娱乐</h4>
+                <p>闲暇时间喜欢和朋友们一起玩游戏、看电影，放松身心，享受生活中的美好时光。</p>
+            </div>
+            <div class="hobby-card glass-card reveal">
+                <div class="hobby-icon">🌏</div>
+                <h4>旅行探索</h4>
+                <p>喜欢去不同的地方看看，感受不同的风土人情，拓宽自己的视野和见识。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 技能展示 -->
+    <section id="skills">
+        <div class="section-title reveal">
+            <h2>我的技能</h2>
+            <p>不断学习，不断进步</p>
+        </div>
+        <div class="skills-grid">
+            <div class="skill-category glass-card reveal">
+                <h3>🏸 羽毛球技能</h3>
+                <div class="skill-item">
+                    <div class="skill-name">正手击球</div>
+                    <p class="skill-desc">经过三年的练习，正手高远球和杀球已经比较稳定，能够控制落点方向，比赛中可以主动进攻得分。</p>
+                    <span class="skill-tag">熟练</span>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-name">反手击球</div>
+                    <p class="skill-desc">反手击球正在稳步提升中，反手高远球可以打到后场，反手吊球也能控制比较好，但反手杀球还需要加强。</p>
+                    <span class="skill-tag">进阶中</span>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-name">网前小球</div>
+                    <p class="skill-desc">网前搓球和勾球手感不错，能够灵活应对网前的各种来球，推球和扑球也在不断进步中。</p>
+                    <span class="skill-tag">良好</span>
+                </div>
+            </div>
+            <div class="skill-category glass-card reveal">
+                <h3>📖 学习成长</h3>
+                <div class="skill-item">
+                    <div class="skill-name">学习热情</div>
+                    <p class="skill-desc">对新知识充满好奇心，喜欢探索课本以外的知识，遇到不懂的问题会主动查阅资料或请教老师。</p>
+                    <span class="skill-tag">充沛</span>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-name">团队精神</div>
+                    <p class="skill-desc">在班级活动和体育比赛中善于与同学配合，乐于分享和帮助他人，是团队中值得信赖的伙伴。</p>
+                    <span class="skill-tag">优秀</span>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-name">进取精神</div>
+                    <p class="skill-desc">面对困难不轻言放弃，不管是学习还是运动都坚持到底，相信每一次努力都会有收获。</p>
+                    <span class="skill-tag">坚定</span>
+                </div>
+            </div>
+            <div class="skill-category glass-card reveal">
+                <h3>💻 电脑技能</h3>
+                <div class="skill-item">
+                    <div class="skill-name">办公软件</div>
+                    <p class="skill-desc">能熟练使用Word写文档、做表格，PPT制作也在学习中，可以完成基本的作业和报告排版。</p>
+                    <span class="skill-tag">基础</span>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-name">上网冲浪</div>
+                    <p class="skill-desc">善于利用网络搜索学习资料和羽毛球教学视频，能快速找到需要的信息和资源。</p>
+                    <span class="skill-tag">熟练</span>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-name">简单修图</div>
+                    <p class="skill-desc">会用手机修图软件做简单的图片处理，比如裁剪、调色、加滤镜，记录生活中的美好瞬间。</p>
+                    <span class="skill-tag">入门</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 成就荣誉 -->
+    <section id="achievements">
+        <div class="section-title reveal">
+            <h2>成就荣誉</h2>
+            <p>努力的见证</p>
+        </div>
+        <div class="achievements-grid">
+            <div class="achievement-card glass-card reveal">
+                <span class="achievement-year">2023</span>
+                <div class="achievement-icon">🎯</div>
+                <h4>羽毛球新手训练营</h4>
+                <p>参加学校羽毛球兴趣班，从零开始学习羽毛球基础动作，正手挥拍练习取得明显进步。</p>
+            </div>
+            <div class="achievement-card glass-card reveal">
+                <span class="achievement-year">2024</span>
+                <div class="achievement-icon">🏸</div>
+                <h4>首次参加羽毛球比赛</h4>
+                <p>勇敢报名参加学校羽毛球比赛，虽然是新手但坚持完成比赛，积累了宝贵的赛场经验。</p>
+            </div>
+            <div class="achievement-card glass-card reveal">
+                <span class="achievement-year">2024</span>
+                <div class="achievement-icon">🏃</div>
+                <h4>学校运动会</h4>
+                <p>参加学校运动会田径项目，奋力拼搏，展现了永不言弃的运动精神。</p>
+            </div>
+            <div class="achievement-card glass-card reveal">
+                <span class="achievement-year">2025</span>
+                <div class="achievement-icon">💪</div>
+                <h4>球技稳步提升</h4>
+                <p>坚持三年羽毛球训练，正手、反手和网前技术都有显著提升，成为球场上的活跃分子。</p>
+            </div>
+            <div class="achievement-card glass-card reveal">
+                <span class="achievement-year">2023</span>
+                <div class="achievement-icon">📚</div>
+                <h4>学业进步奖</h4>
+                <p>学习成绩稳步提升，在班级中排名前进明显，获得老师和同学们的认可。</p>
+            </div>
+            <div class="achievement-card glass-card reveal">
+                <span class="achievement-year">2023</span>
+                <div class="achievement-icon">🤝</div>
+                <h4>班级活动积极分子</h4>
+                <p>积极参与班级各项活动，热心帮助同学，为班级集体贡献自己的力量。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 联系我 -->
+    <section id="contact">
+        <div class="section-title reveal">
+            <h2>联系我</h2>
+            <p>想约球？想交流？随时联系我！</p>
+        </div>
+        <div class="contact-grid">
+            <div class="contact-info reveal">
+                <h3>一起打球，一起成长</h3>
+                <p>如果你也喜欢羽毛球，或者想一起学习交流，欢迎随时联系我！无论是球场上的切磋，还是生活中的交流，我都很期待认识你。</p>
+                <div class="contact-item">
+                    <div class="contact-icon">📍</div>
+                    <div class="contact-text">
+                        <span>地址</span>
+                        <strong>四川省德阳市罗江区万安镇秀水湾</strong>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">🏸</div>
+                    <div class="contact-text">
+                        <span>约球</span>
+                        <strong>周末均可，欢迎切磋</strong>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">📱</div>
+                    <div class="contact-text">
+                        <span>电话</span>
+                        <a href="tel:15883442318">158-8344-2318</a>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">💬</div>
+                    <div class="contact-text">
+                        <span>微信</span>
+                        <strong>15883442318</strong>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">📧</div>
+                    <div class="contact-text">
+                        <span>邮箱</span>
+                        <a href="mailto:zhoujian@example.com">zhoujian@example.com</a>
+                    </div>
+                </div>
+                <div class="social-links">
+                    <a href="#" class="social-link" title="微信">💬</a>
+                    <a href="#" class="social-link" title="QQ">🐧</a>
+                    <a href="#" class="social-link" title="抖音">🎵</a>
+                    <a href="#" class="social-link" title="微博">📱</a>
+                </div>
+            </div>
+            <form class="contact-form glass-card reveal" id="contactForm">
+                <div class="form-group">
+                    <input type="text" id="name" placeholder=" " required>
+                    <label for="name">你的名字</label>
+                </div>
+                <div class="form-group">
+                    <input type="email" id="email" placeholder=" " required>
+                    <label for="email">联系方式</label>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="subject" placeholder=" " required>
+                    <label for="subject">主题</label>
+                </div>
+                <div class="form-group">
+                    <textarea id="message" placeholder=" " required></textarea>
+                    <label for="message">留言内容</label>
+                </div>
+                <button type="submit" class="btn btn-primary">发送消息 ✨</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer>
+        <p>用 <span class="heart">❤</span> 和热爱打造</p>
+        <p>© 2026 周剑的个人主页. 保留所有权利.</p>
+    </footer>
+
+    <script>
+        // 开场动画
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const splashScreen = document.getElementById('splashScreen');
+                splashScreen.classList.add('hidden');
+                setTimeout(startCounterAnimation, 500);
+            }, 2800);
+        });
+
+        // 生成粒子效果
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const colors = ['#74b9ff', '#00cec9', '#fdcb6e', '#fd79a8', '#55efc4'];
+            const particleCount = 40;
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDuration = (Math.random() * 20 + 10) + 's';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                const size = (Math.random() * 6 + 3) + 'px';
+                particle.style.width = size;
+                particle.style.height = size;
+                particle.style.opacity = Math.random() * 0.5 + 0.2;
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                particlesContainer.appendChild(particle);
+            }
+        }
+        createParticles();
+
+        // 鼠标跟随光点效果
+        const cursorGlow = document.getElementById('cursorGlow');
+        document.addEventListener('mousemove', (e) => {
+            cursorGlow.style.left = e.clientX + 'px';
+            cursorGlow.style.top = e.clientY + 'px';
+        });
+
+        // 点击波纹效果
+        document.addEventListener('click', (e) => {
+            const ripple = document.createElement('div');
+            ripple.className = 'click-ripple';
+            ripple.style.left = (e.clientX - 100) + 'px';
+            ripple.style.top = (e.clientY - 100) + 'px';
+            document.body.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 600);
+        });
+
+        // 3D视差效果
+        const hero3dContent = document.getElementById('hero3dContent');
+        const heroSection = document.querySelector('.hero');
+        heroSection.addEventListener('mousemove', (e) => {
+            const rect = heroSection.getBoundingClientRect();
+            const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
+            const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
+            hero3dContent.style.transform = `rotateY(${x * 8}deg) rotateX(${-y * 8}deg)`;
+        });
+        heroSection.addEventListener('mouseleave', () => {
+            hero3dContent.style.transform = 'rotateY(0) rotateX(0)';
+        });
+
+        // 数字计数动画
+        function startCounterAnimation() {
+            const counters = document.querySelectorAll('.stat-number');
+            counters.forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-target'));
+                const duration = 2000;
+                const step = target / (duration / 16);
+                let current = 0;
+                const updateCounter = () => {
+                    current += step;
+                    if (current < target) {
+                        counter.textContent = Math.ceil(current);
+                        requestAnimationFrame(updateCounter);
+                    } else {
+                        counter.textContent = target;
+                    }
+                };
+                updateCounter();
+            });
+        }
+
+        // 滚动视差效果
+        window.addEventListener('scroll', () => {
+            const scrolled = window.scrollY;
+            const heroContent = document.querySelector('.hero-content');
+            const glowOrbs = document.querySelectorAll('.glow-orb');
+            const shuttlecocks = document.querySelectorAll('.shuttlecock');
+            if (heroContent && scrolled < window.innerHeight) {
+                heroContent.style.transform = `translateY(${scrolled * 0.3}px)`;
+                heroContent.style.opacity = 1 - (scrolled / (window.innerHeight * 0.8));
+            }
+            glowOrbs.forEach((orb, index) => {
+                const speed = 0.1 + (index * 0.05);
+                orb.style.transform = `translateY(${scrolled * speed}px)`;
+            });
+            shuttlecocks.forEach((cock, index) => {
+                const speed = 0.15 + (index * 0.03);
+                cock.style.transform = `translateY(${scrolled * speed}px)`;
+            });
+        });
+
+        // 打字机效果
+        const texts = ['在校学生', '羽毛球爱好者', '热爱运动的少年', '不断学习成长'];
+        let textIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        const typedText = document.getElementById('typed-text');
+        function typeEffect() {
+            const currentText = texts[textIndex];
+            if (isDeleting) {
+                typedText.textContent = currentText.substring(0, charIndex - 1);
+                charIndex--;
+            } else {
+                typedText.textContent = currentText.substring(0, charIndex + 1);
+                charIndex++;
+            }
+            let typeSpeed = isDeleting ? 50 : 100;
+            if (!isDeleting && charIndex === currentText.length) {
+                typeSpeed = 2000;
+                isDeleting = true;
+            } else if (isDeleting && charIndex === 0) {
+                isDeleting = false;
+                textIndex = (textIndex + 1) % texts.length;
+                typeSpeed = 500;
+            }
+            setTimeout(typeEffect, typeSpeed);
+        }
+        setTimeout(typeEffect, 1200);
+
+        // 导航栏滚动效果
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // 滚动显示动画
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll('.reveal');
+            reveals.forEach(element => {
+                const windowHeight = window.innerHeight;
+                const elementTop = element.getBoundingClientRect().top;
+                const elementVisible = 150;
+                if (elementTop < windowHeight - elementVisible) {
+                    element.classList.add('visible');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', () => {
+            revealOnScroll();
+        });
+        revealOnScroll();
+
+        // 表单提交处理
+        const contactForm = document.getElementById('contactForm');
+        contactForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const submitBtn = contactForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = '发送中...';
+            submitBtn.disabled = true;
+            setTimeout(() => {
+                submitBtn.textContent = '发送成功！ ✓';
+                submitBtn.style.background = 'linear-gradient(135deg, #55efc4, #00b894)';
+                setTimeout(() => {
+                    submitBtn.textContent = originalText;
+                    submitBtn.style.background = '';
+                    submitBtn.disabled = false;
+                    contactForm.reset();
+                }, 2000);
+            }, 1500);
+        });
+
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
