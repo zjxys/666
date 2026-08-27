@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>留言板 + 点赞</title>
+  <title>留言板 + 点赞 + AI 答疑</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -84,10 +84,37 @@
     }
     .input-group button:hover { opacity: 0.9; }
     .empty-tip { text-align: center; color: #bbb; padding: 20px; }
+
+    /* AI 答疑区 */
+    #qa-list {
+      max-height: 360px;
+      overflow-y: auto;
+      margin-bottom: 16px;
+    }
+    .qa-msg { margin-bottom: 12px; }
+    .qa-user {
+      background: #0066cc;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px 8px 0 8px;
+      margin-left: 40px;
+      font-size: 0.9rem;
+    }
+    .qa-ai {
+      background: #f0f0f0;
+      padding: 8px 12px;
+      border-radius: 8px 8px 8px 0;
+      margin-right: 40px;
+      font-size: 0.9rem;
+      margin-top: 6px;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+    .qa-ai.loading { color: #999; font-style: italic; }
   </style>
 </head>
 <body>
-  <h1>留言板 + 点赞</h1>
+  <h1>留言板 + 点赞 + AI 答疑</h1>
 
   <!-- 点赞区 -->
   <div class="card like-section">
@@ -95,6 +122,18 @@
     <button class="like-btn" id="like-btn" onclick="toggleLike()">
       👍 赞 <span class="like-count" id="like-count">0</span>
     </button>
+  </div>
+
+  <!-- AI 答疑区 -->
+  <div class="card">
+    <h2>AI 答疑(通义千问)</h2>
+    <div id="qa-list">
+      <div class="empty-tip">有什么问题尽管问我~</div>
+    </div>
+    <div class="input-group">
+      <input id="qa-input" placeholder="输入你的问题..." onkeypress="qaEnter(event)">
+      <button onclick="askAI()">提问</button>
+    </div>
   </div>
 
   <!-- 留言区 -->
@@ -113,15 +152,101 @@
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    // ====== 把下面两个值换成你自己的 ======
-    const SUPABASE_URL = https://ljmjwqjmbpnhrwrbuxkc.supabase.co/rest/v1/    const SUPABASE_ANON_KEY = sb_publishable_I3wka1FDH4EiZuEFOyEm8A_421_fHwY   // =====================================
+    // ====== Supabase 配置(换成你自己的) ======
+    const SUPABASE_URL = "https://ljmjwqjmbpnhrwrbuxkc.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_I3wka1FDH4EiZuEFOyEm8A_421_fHwY";
+
+    // ====== 通义千问 API 配置(换成你自己的) ======
+    const DASHSCOPE_API_KEY = sk-ws-H.EXHXPDD.0JVT.MEUCIAFoh5mSmmyKSiKwt3DaEkfGoO1gnHL5FZkJZoHZpnr0AiEA_sSef_bPihEgt-aSX_ifidZ7gOgDI6JmiezA08zviuY    const QWEN_MODEL = "qwen-plus";
+    // ============================================
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const ARTICLE_SLUG = "home-page"; // 点赞标识,每个页面用不同的值
+    const ARTICLE_SLUG = "home-page";
 
     const gbList = document.getElementById("guestbook-list");
     const likeBtn = document.getElementById("like-btn");
     const likeCountEl = document.getElementById("like-count");
+    const qaList = document.getElementById("qa-list");
+    const qaInput = document.getElementById("qa-input");
+
+    // ====== AI 答疑逻辑 ======
+
+    const chatHistory = [
+      { role: "system", content: "你是一个友好的助手,请用中文简洁地回答问题,每次回答不超过200字。" }
+    ];
+
+    window.askAI = async function() {
+      const question = qaInput.value.trim();
+      if (!question) return;
+      if (DASHSCOPE_API_KEY === "sk-你的阿里云百炼APIKey") {
+        alert("请先在代码里填入你的阿里云百炼 API Key!");
+        return;
+      }
+
+      // 清掉空提示
+      const empty = qaList.querySelector(".empty-tip");
+      if (empty) qaList.innerHTML = "";
+
+      // 显示用户问题
+      const userDiv = document.createElement("div");
+      userDiv.className = "qa-msg";
+      userDiv.innerHTML = `<div class="qa-user">${escapeHtml(question)}</div>`;
+      qaList.appendChild(userDiv);
+
+      // 显示 AI 加载中
+      const aiDiv = document.createElement("div");
+      aiDiv.className = "qa-msg";
+      aiDiv.innerHTML = `<div class="qa-ai loading">正在思考中...</div>`;
+      qaList.appendChild(aiDiv);
+      qaList.scrollTop = qaList.scrollHeight;
+
+      // 记录对话历史
+      chatHistory.push({ role: "user", content: question });
+
+      try {
+        const response = await fetch(
+          "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${DASHSCOPE_API_KEY}`
+            },
+            body: JSON.stringify({
+              model: QWEN_MODEL,
+              messages: chatHistory
+            })
+          }
+        );
+
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error(`API 错误 ${response.status}: ${errText}`);
+        }
+
+        const data = await response.json();
+        const answer = data.choices[0].message.content;
+
+        // 记录 AI 回复
+        chatHistory.push({ role: "assistant", content: answer });
+
+        // 显示 AI 回复
+        aiDiv.querySelector(".qa-ai").textContent = answer;
+        aiDiv.querySelector(".qa-ai").classList.remove("loading");
+        qaList.scrollTop = qaList.scrollHeight;
+      } catch (err) {
+        aiDiv.querySelector(".qa-ai").textContent = "回答失败: " + err.message;
+        aiDiv.querySelector(".qa-ai").classList.remove("loading");
+        console.error("AI 答疑出错:", err);
+      }
+
+      qaInput.value = "";
+    };
+
+    function qaEnter(e) {
+      if (e.key === "Enter") window.askAI();
+    }
+    window.qaEnter = qaEnter;
 
     // ====== 留言板逻辑 ======
 
@@ -180,7 +305,6 @@
         { event: "INSERT", schema: "public", table: "guestbook" },
         (payload) => {
           const m = payload.new;
-          // 如果列表里还是空提示,先清掉
           const empty = gbList.querySelector(".empty-tip");
           if (empty) gbList.innerHTML = "";
 
@@ -212,14 +336,13 @@
       const count = data?.like_count || 0;
       likeCountEl.textContent = count;
 
-      // 检查本地是否已点赞
       const liked = localStorage.getItem(`liked-${ARTICLE_SLUG}`);
       if (liked) likeBtn.classList.add("liked");
     }
 
     window.toggleLike = async function() {
       if (likeBtn.classList.contains("liked")) {
-        return; // 已经点过了
+        return;
       }
 
       const { data } = await supabase
