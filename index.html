@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>留言板 + 点赞</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, "Segoe UI", sans-serif;
+      background: #f0f2f5;
+      color: #333;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+    h1 { text-align: center; margin-bottom: 30px; color: #1a1a1a; }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    h2 { font-size: 1.1rem; margin-bottom: 12px; color: #666; }
+
+    /* 点赞区 */
+    .like-section { text-align: center; }
+    .like-btn {
+      background: none;
+      border: 2px solid #ff4d4f;
+      color: #ff4d4f;
+      font-size: 1.2rem;
+      padding: 8px 24px;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .like-btn:hover { background: #ff4d4f; color: #fff; }
+    .like-btn.liked { background: #ff4d4f; color: #fff; }
+    .like-count { font-weight: bold; margin-left: 8px; }
+
+    /* 留言列表 */
+    #guestbook-list {
+      max-height: 320px;
+      overflow-y: auto;
+      margin-bottom: 16px;
+    }
+    .msg {
+      margin-bottom: 8px;
+      padding: 10px 12px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      animation: slideIn 0.25s ease;
+    }
+    .msg .name { font-weight: bold; color: #0066cc; }
+    .msg .time { color: #999; font-size: 0.75rem; display: block; margin-top: 2px; }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 输入区 */
+    .input-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    .input-group input {
+      flex: 1;
+      min-width: 100px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      outline: none;
+    }
+    .input-group input:focus { border-color: #0066cc; }
+    .input-group button {
+      padding: 10px 20px;
+      background: #0066cc;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .input-group button:hover { opacity: 0.9; }
+    .empty-tip { text-align: center; color: #bbb; padding: 20px; }
+  </style>
+</head>
+<body>
+  <h1>留言板 + 点赞</h1>
+
+  <!-- 点赞区 -->
+  <div class="card like-section">
+    <h2>给这个页面点个赞</h2>
+    <button class="like-btn" id="like-btn" onclick="toggleLike()">
+      👍 赞 <span class="like-count" id="like-count">0</span>
+    </button>
+  </div>
+
+  <!-- 留言区 -->
+  <div class="card">
+    <h2>留言板</h2>
+    <div id="guestbook-list">
+      <div class="empty-tip">还没有留言,快来抢沙发~</div>
+    </div>
+    <div class="input-group">
+      <input id="gb-name" placeholder="你的名字" maxlength="20">
+      <input id="gb-msg" placeholder="写点什么..." maxlength="200" onkeypress="handleEnter(event)">
+      <button onclick="signGuestbook()">留言</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+    // ====== 把下面两个值换成你自己的 ======
+    const SUPABASE_URL = https://ljmjwqjmbpnhrwrbuxkc.supabase.co/rest/v1/    const SUPABASE_ANON_KEY = sb_publishable_I3wka1FDH4EiZuEFOyEm8A_421_fHwY   // =====================================
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const ARTICLE_SLUG = "home-page"; // 点赞标识,每个页面用不同的值
+
+    const gbList = document.getElementById("guestbook-list");
+    const likeBtn = document.getElementById("like-btn");
+    const likeCountEl = document.getElementById("like-count");
+
+    // ====== 留言板逻辑 ======
+
+    async function loadGuestbook() {
+      const { data, error } = await supabase
+        .from("guestbook")
+        .select("*")
+        .order("id", { ascending: false })
+        .limit(50);
+
+      if (error) {
+        console.error("加载留言失败:", error);
+        return;
+      }
+      renderGuestbook(data || []);
+    }
+
+    function renderGuestbook(data) {
+      if (data.length === 0) {
+        gbList.innerHTML = '<div class="empty-tip">还没有留言,快来抢沙发~</div>';
+        return;
+      }
+      gbList.innerHTML = "";
+      data.forEach(m => {
+        const div = document.createElement("div");
+        div.className = "msg";
+        div.innerHTML = `
+          <span class="name">${escapeHtml(m.name)}</span>: ${escapeHtml(m.message)}
+          <span class="time">${new Date(m.created_at).toLocaleString("zh-CN")}</span>
+        `;
+        gbList.appendChild(div);
+      });
+    }
+
+    window.signGuestbook = async function() {
+      const name = document.getElementById("gb-name").value.trim() || "匿名";
+      const msg = document.getElementById("gb-msg").value.trim();
+      if (!msg) return alert("请输入留言内容");
+
+      const { error } = await supabase
+        .from("guestbook")
+        .insert([{ name, message: msg }]);
+
+      if (error) {
+        alert("留言失败,请稍后重试");
+        console.error(error);
+        return;
+      }
+      document.getElementById("gb-msg").value = "";
+    };
+
+    // 实时监听新留言
+    supabase
+      .channel("guestbook-realtime")
+      .on("postgres_changes",
+        { event: "INSERT", schema: "public", table: "guestbook" },
+        (payload) => {
+          const m = payload.new;
+          // 如果列表里还是空提示,先清掉
+          const empty = gbList.querySelector(".empty-tip");
+          if (empty) gbList.innerHTML = "";
+
+          const div = document.createElement("div");
+          div.className = "msg";
+          div.innerHTML = `
+            <span class="name">${escapeHtml(m.name)}</span>: ${escapeHtml(m.message)}
+            <span class="time">${new Date(m.created_at).toLocaleString("zh-CN")}</span>
+          `;
+          gbList.insertBefore(div, gbList.firstChild);
+        }
+      )
+      .subscribe();
+
+    function handleEnter(e) {
+      if (e.key === "Enter") window.signGuestbook();
+    }
+    window.handleEnter = handleEnter;
+
+    // ====== 点赞逻辑 ======
+
+    async function loadLikeCount() {
+      const { data } = await supabase
+        .from("article_like")
+        .select("*")
+        .eq("article", ARTICLE_SLUG)
+        .maybeSingle();
+
+      const count = data?.like_count || 0;
+      likeCountEl.textContent = count;
+
+      // 检查本地是否已点赞
+      const liked = localStorage.getItem(`liked-${ARTICLE_SLUG}`);
+      if (liked) likeBtn.classList.add("liked");
+    }
+
+    window.toggleLike = async function() {
+      if (likeBtn.classList.contains("liked")) {
+        return; // 已经点过了
+      }
+
+      const { data } = await supabase
+        .from("article_like")
+        .select("*")
+        .eq("article", ARTICLE_SLUG)
+        .maybeSingle();
+
+      if (data) {
+        await supabase
+          .from("article_like")
+          .update({ like_count: data.like_count + 1 })
+          .eq("article", ARTICLE_SLUG);
+        likeCountEl.textContent = data.like_count + 1;
+      } else {
+        await supabase
+          .from("article_like")
+          .insert([{ article: ARTICLE_SLUG, like_count: 1 }]);
+        likeCountEl.textContent = 1;
+      }
+
+      likeBtn.classList.add("liked");
+      localStorage.setItem(`liked-${ARTICLE_SLUG}`, "1");
+    };
+
+    // 简单转义,防 XSS
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str || "";
+      return div.innerHTML;
+    }
+
+    // 初始化
+    loadGuestbook();
+    loadLikeCount();
+  </script>
+</body>
+</html>
